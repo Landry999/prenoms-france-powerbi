@@ -1,0 +1,18 @@
+# Power BI Desktop
+*.pbix.tmp
+*.pbip.tmp
+.pbi/
+.pbi/localSettings.json
+.pbi/cache.abf
+
+# Office / Excel
+~$*
+*.xlk
+
+# Windows
+Thumbs.db
+desktop.ini
+
+# Divers
+*.log
+*.bak

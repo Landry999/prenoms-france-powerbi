@@ -1,0 +1,12 @@
+# Normalisation des fins de ligne pour le texte
+* text=auto eol=lf
+
+# Binaires : jamais de diff ni de fusion automatique
+*.pbix   binary
+*.pbip   binary
+*.parquet binary
+*.xlsx   binary
+
+# Si le dépôt grossit trop, basculer ces deux types en Git LFS :
+#   git lfs install
+#   git lfs track "*.pbix" "*.parquet"

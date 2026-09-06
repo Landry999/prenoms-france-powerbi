@@ -46,11 +46,7 @@ Naissances = SUM(FRANCE[valeur])
 ### `Rang`
 
 ```dax
-Rang = 
-IF(
-    NOT ISBLANK([Naissances]) && HASONEVALUE(PRENOMS[sexe]),
-    MIN(FRANCE[rang])
-)
+Rang = MIN(FRANCE[rang])
 ```
 
 `MIN` n'agrège rien en pratique — dans le contexte d'un prénom, d'une période et d'un sexe il n'existe qu'une ligne. C'est le moyen de transformer une colonne en mesure.
@@ -201,40 +197,6 @@ RETURN
     )
 ```
 
-### `Titre Evolution`
-
-```dax
-Titre Evolution = 
-VAR ListePrenoms = VALUES(PRENOMS[prenom])
-VAR Nb     = COUNTROWS(ListePrenoms)
-VAR Reste  = Nb - 3
-VAR Trois  = 
-    CONCATENATEX(
-        TOPN(3, ListePrenoms, PRENOMS[prenom], ASC),
-        PRENOMS[prenom], ", ", PRENOMS[prenom], ASC
-    )
-VAR Sujet = 
-    SWITCH(
-        TRUE(),
-        NOT ISFILTERED(PRENOMS[prenom]), "de tous les prénoms",
-        Nb = 1,  "du prénom "   & Trois,
-        Nb <= 3, "des prénoms " & Trois,
-                 "des prénoms " & Trois & " et " & Reste & IF(Reste = 1, " autre", " autres")
-    )
-VAR AnneeMin = MIN('Date'[annee])
-VAR AnneeMax = MAX('Date'[annee])
-VAR Periode = 
-    IF(
-        AnneeMin = AnneeMax,
-        " en "   & FORMAT(AnneeMin, "0"),
-        " de "   & FORMAT(AnneeMin, "0") & " à " & FORMAT(AnneeMax, "0")
-    )
-RETURN
-    "Évolution " & Sujet & Periode
-```
-
-Trois mécanismes s'y combinent. `ISFILTERED` distingue « rien de sélectionné » de « beaucoup de sélectionné » — sans lui, `VALUES` renverrait les milliers de prénoms de la table et le titre annoncerait « et 11 997 autres ». Le `TOPN(3)` protège la mise en page, un titre sur trois lignes déplaçant tout le visuel sous lui. Et `MIN`/`MAX` sur `annee` ne peuvent jamais être vides, là où un `SELECTEDVALUE` sur la décennie laissait un trou dans la phrase dès que zéro ou deux décennies étaient cochées.
-
 ---
 
 ## Cartes
@@ -251,23 +213,15 @@ VAR Gagnant =
         DESC
     )
 RETURN
-    IF(
-        HASONEVALUE(PRENOMS[sexe]),
-        CONCATENATEX(Gagnant, PRENOMS[prenom], " / ")
-    )
+    CONCATENATEX(Gagnant, PRENOMS[prenom], " / ")
 ```
 
-`CONCATENATEX` plutôt que `SELECTEDVALUE` : `TOPN` renvoie plusieurs lignes en cas d'égalité, et la carte se viderait sur une année d'ex æquo sans que rien n'explique pourquoi.
+`CONCATENATEX` plutôt que `SELECTEDVALUE` : `TOPN` renvoie plusieurs lignes en cas d'égalité, et la carte se viderait sur une année d'ex aequo sans que rien n'explique pourquoi.
 
 ### `Naissances de l'année`
 
 ```dax
-Naissances de l'année = 
-CALCULATE(
-    [Naissances],
-    REMOVEFILTERS(PRENOMS[prenom]),
-    REMOVEFILTERS(FRANCE[rang])
-)
+Naissances de l'année = CALCULATE([Naissances], REMOVEFILTERS(PRENOMS[prenom]), REMOVEFILTERS(FRANCE[rang]))
 ```
 
 ### `Poids du top 10`
@@ -303,53 +257,6 @@ Filtre de lignes de la matrice, avec un seuil (`<= 3` par défaut) qui sert de c
 C'est ce qui remplace un filtre « N premiers par naissances », lequel ne pouvait que sélectionner des prénoms anciens : Jean culmine au-dessus de 40 000 naissances en 1900, Gabriel plafonne vers 5 000 en 2025, et le top 10 pesait plus de 40 % des naissances en 1900 contre moins de 10 % aujourd'hui. Un classement par volume cumulé vidait donc entièrement les colonnes récentes.
 
 Le `REMOVEFILTERS('Date')` la rend utilisable comme filtre de lignes : sans lui elle serait recalculée colonne par colonne et viderait des cellules au lieu de retirer des lignes.
-
----
-
-## Page Evolution
-
-### `Pic du prénom`
-
-```dax
-Pic du prénom = 
-VAR Historique = 
-    CALCULATETABLE(
-        ADDCOLUMNS(VALUES('Date'[annee]), "@n", [Naissances]),
-        REMOVEFILTERS('Date')
-    )
-VAR Sommet   = MAXX(Historique, [@n])
-VAR AnneePic = MINX(FILTER(Historique, [@n] = Sommet), 'Date'[annee])
-RETURN
-    IF(
-        HASONEVALUE(PRENOMS[prenom]) && Sommet > 0,
-        FORMAT(AnneePic, "0") & " · " & FORMAT(Sommet, "#,##0") & " naissances",
-        "Sélectionne un prénom"
-    )
-```
-
-`ADDCOLUMNS` matérialise la table une fois pour deux usages — le maximum, puis la recherche de la ligne qui le porte — au lieu de recalculer `[Naissances]` sur 126 années une seconde fois. Le préfixe `@` du nom de colonne temporaire évite qu'elle masque une mesure du même nom, collision qui ne produit aucune erreur mais fausse silencieusement le résultat.
-
-`MINX` sur les ex æquo retient l'année la plus ancienne, ce qui rend la mesure déterministe d'un rafraîchissement à l'autre.
-
-### `Meilleur rang du prénom`
-
-```dax
-Meilleur rang du prénom = 
-VAR Historique = 
-    CALCULATETABLE(
-        ADDCOLUMNS(VALUES('Date'[annee]), "@r", [Rang]),
-        REMOVEFILTERS('Date')
-    )
-VAR Meilleur      = MINX(Historique, [@r])
-VAR AnneeMeilleur = MINX(FILTER(Historique, [@r] = Meilleur), 'Date'[annee])
-RETURN
-    IF(
-        HASONEVALUE(PRENOMS[prenom]) && NOT ISBLANK(Meilleur),
-        "n° " & Meilleur & " en " & FORMAT(AnneeMeilleur, "0")
-    )
-```
-
-Le pic de volume et le pic de popularité tombent rarement la même année : le nombre de naissances dépend autant de la natalité de l'époque que de la mode du prénom. Afficher les deux côte à côte est ce qui rend la page lisible — « Pic : 1998 · 11 000 naissances » et « Meilleur rang : n° 1 en 1996 » racontent ensemble une histoire qu'aucune des deux ne dit seule.
 
 ---
 

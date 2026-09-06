@@ -4,9 +4,9 @@ Rapport Power BI construit sur le fichier des prénoms de l'INSEE : quels préno
 
 ## Les deux pages
 
-**Palmarès** — le top 10 d'une période de référence, avec pour chaque prénom le nombre de naissances et son mouvement de rang depuis la période précédente (`▲ 2`, `▼ 1`, `entrée`). Trois cartes donnent le contexte : le n° 1 de l'année, le poids du top 10 dans l'ensemble des naissances, et une matrice croise les prénoms avec les onze périodes de référence, la couleur de chaque cellule encodant le rang.
-
 **Evolution** — la courbe d'un ou plusieurs prénoms sur toute la profondeur historique, avec recherche par saisie et filtres par sexe et par période.
+
+**Palmarès** — le top 10 d'une période de référence, avec pour chaque prénom le nombre de naissances et son mouvement de rang depuis la période précédente (`▲ 2`, `▼ 1`, `entrée`). Trois cartes donnent le contexte : le n° 1 de l'année, le poids du top 10 dans l'ensemble des naissances, et une matrice croise les prénoms avec les onze périodes de référence, la couleur de chaque cellule encodant le rang.
 
 ## Les données
 

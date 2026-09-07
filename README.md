@@ -12,8 +12,8 @@ Rapport Power BI construit sur le fichier des prénoms de l'INSEE : quels préno
 
 | Fichier | Contenu | Source |
 |---|---|---|
-| `prenoms-2025.parquet` | Naissances par prénom, sexe, année et territoire, avec le rang fourni par l'INSEE | INSEE — fichier des prénoms |
-| `Prenoms.pbix` | Le rapport : modèle, mesures et mise en page | — |
+| `prenoms-2025.parquet` | Naissances par prénom, sexe, année et territoire, avec le rang fourni par l'INSEE | INSEE - fichier des prénoms |
+| `Prenoms.pbix` | Le rapport : modèle, mesures et mise en page | - |
 
 Le rang venant directement de l'INSEE, aucune mesure de classement n'est recalculée au grain de l'année : `FRANCE[rang]` sert à la fois de valeur affichée et de filtre « top 10 ».
 
